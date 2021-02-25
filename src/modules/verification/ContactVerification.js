@@ -1,104 +1,81 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useContext } from "react";
 import {
   Wizard,
-  Card,
-  Panel,
   Text,
   Mobileno,
   Email,
-  ActionBar,
   Button,
-  Error,
   Spacer,
   Subtitle,
-  BackLink,
-  Title,
-  MsgBox,
   Service
 } from "rsi-react-components";
 
-import { PartnerContext, UserContext } from "../../contexts";
+import { PartnerContext, ContactContext } from "../../contexts";
 
 const ContactVerification = ({
-  module,
-  title,
-  subtitle = "Contact Verification",
+  title = "Contact Verification",
   onVerify,
   onCancel,
   connection = "epayment",
-  visibleWhen = true,
+  visible = true,
   showName = true,
   emailRequired = true
 }) => {
   const [partner] = useContext(PartnerContext);
-  const [contact, setContact] = useContext(UserContext);
-  const [error, setError] = useState();
-  const formRef = useRef();
+  const [contact, setContact] = useContext(ContactContext);
 
-  if (!visibleWhen) return null;
+  if (!visible) return null;
 
-  const verifyEmail = async () => {
+  const verifyEmail = async (contact) => {
     const emailSvc = Service.lookupAsync(
       `${partner.id}:VerifyEmailService`,
       connection
     );
-    return emailSvc.invoke("verifyEmail", {
-      email: contact.email,
-      mobileno: contact.mobileno
-    });
+    return emailSvc.invoke("verifyEmail", contact);
   };
 
-  const submitInfo = ({ form, values }) => {
-    console.log("PASS");
-    return true;
-    // if (!formRef.current.reportValidity()) return;
-    // if (!contact.email && !contact.mobileno) {
-    //   setError("Please specify email or Mobile No.");
-    //   return;
-    // }
-    // setError(null);
-    // setVerifying(true);
-    // verifyEmail()
-    //   .then((data) => {
-    //     setHiddenCode(data.key);
-    //     setVerifying(false);
-    //   })
-    //   .catch((err) => {
-    //     setError(err);
-    //     setVerifying(false);
-    //   });
+  const submitInfo = ({ values, form }, onSuccess) => {
+    verifyEmail(values.contact)
+      .then((data) => {
+        form.change("hiddenCode", data.key);
+        onSuccess();
+      })
+      .catch((err) => {
+        onSuccess(false, err);
+      });
   };
+
+  const verifyCode = ({ values }, onSuccess) => {
+    const { hiddenCode, keycode } = values;
+    if (hiddenCode !== keycode) {
+      onSuccess(false, "Code is incorrect");
+    } else {
+      onSuccess();
+    }
+  };
+
   const handleSubmit = (values) => {
-    console.log("submit ", values);
+    values.contact.verified = true;
+    setContact(values.contact);
+    onVerify(values.contact);
   };
-
-  const moduleTitle = (module && module.title) || title || null;
 
   return (
-    <Card>
-      {moduleTitle && <Title>{moduleTitle}</Title>}
-      <Subtitle>{subtitle}</Subtitle>
+    <React.Fragment>
+      <Subtitle>{title}</Subtitle>
       <Spacer />
-      <Error msg={error} />
       <Wizard
         initialValues={{
           contact: contact,
           hiddenCode: null,
-          keCcode: null,
+          keycode: null,
           error: null,
           isResendCode: false
         }}
         onSubmit={handleSubmit}
+        showErrorDialog={true}
       >
-        <Wizard.Page
-          validate={({ contact }) => {
-            const errors = { contact: {} };
-            if (!contact.name) errors.contact.name = "Required";
-            if (!contact.address) errors.contact.address = "Required";
-            return errors;
-          }}
-          onSubmit={submitInfo}
-        >
+        <Wizard.Page onSubmit={submitInfo} onCancel={onCancel}>
           {showName === true && (
             <React.Fragment>
               <Text
@@ -117,14 +94,31 @@ const ContactVerification = ({
           />
           <Mobileno name="contact.mobileno" />
         </Wizard.Page>
-        <Wizard.Page>
-          <h1>Validation</h1>
-        </Wizard.Page>
-        <Wizard.Page>
-          <h1>Confirmation</h1>
+
+        <Wizard.Page onSubmit={verifyCode}>
+          <Text
+            caption="Email Code"
+            placeholder="Enter code sent to your email"
+            name="keycode"
+            maxLength={6}
+            autoFocus={true}
+          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end"
+            }}
+          >
+            <Button
+              caption="Resend Code"
+              action={() => setIsResendCode(true)}
+              variant="text"
+            />
+          </div>
         </Wizard.Page>
       </Wizard>
-    </Card>
+    </React.Fragment>
   );
 };
 
