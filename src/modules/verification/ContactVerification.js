@@ -1,31 +1,34 @@
-import React, { useState, useContext } from "react";
+import React from "react";
 import {
-  Wizard,
+  Card,
   Text,
   Mobileno,
   Email,
-  Button,
-  Spacer,
+  Title,
   Subtitle,
-  Service
+  Service,
+  Wizard,
+  FormButton
 } from "rsi-react-components";
 
-import { PartnerContext, ContactContext } from "../../contexts";
+import { usePartner } from "../../hooks";
 
 const ContactVerification = ({
-  title = "Contact Verification",
-  onVerify,
+  page,
+  title,
+  subtitle = "Contact Verification",
+  onVerifyContact: onVerify,
   onCancel,
   connection = "epayment",
   visible = true,
   showName = true,
-  emailRequired = true
+  emailRequired = true,
+  moveNextStep
 }) => {
-  const [partner] = useContext(PartnerContext);
-  const [contact, setContact] = useContext(ContactContext);
+  const [partner] = usePartner();
 
   if (!visible) return null;
-
+  
   const verifyEmail = async (contact) => {
     const emailSvc = Service.lookupAsync(
       `${partner.id}:VerifyEmailService`,
@@ -34,39 +37,51 @@ const ContactVerification = ({
     return emailSvc.invoke("verifyEmail", contact);
   };
 
-  const submitInfo = ({ values, form }, onSuccess) => {
-    verifyEmail(values.contact)
+  const submitInfo = (data, onError, form) => {
+    verifyEmail(data.contact)
       .then((data) => {
         form.change("hiddenCode", data.key);
-        onSuccess();
+        onError(false);
       })
       .catch((err) => {
-        onSuccess(false, err);
+        onError(err);
       });
   };
 
-  const verifyCode = ({ values }, onSuccess) => {
-    const { hiddenCode, keycode } = values;
+  const verifyCode = (data, onError) => {
+    const { hiddenCode, keycode } = data;
     if (hiddenCode !== keycode) {
-      onSuccess(false, "Code is incorrect");
+      onError("Code is incorrect");
     } else {
-      onSuccess();
+      onError(false);
     }
   };
 
-  const handleSubmit = (values) => {
-    values.contact.verified = true;
-    setContact(values.contact);
-    onVerify(values.contact);
+  const handleSubmit = (data) => {
+    data.contact.verified = true;
+    if (onVerify) {
+      onVerify(data.contact);
+    }
+    moveNextStep();
   };
 
+  const setIsResendCode = (args) => {
+    const { data, form } = args;
+    const callback = (error) => {
+      if (!error) {
+        window.alert("New verification code sent");
+      }
+    }
+    submitInfo(data, callback, form)
+  }
+
   return (
-    <React.Fragment>
-      <Subtitle>{title}</Subtitle>
-      <Spacer />
+    <Card>
+      <Title>{title}</Title>
+      <Subtitle>{subtitle || page && page.caption}</Subtitle>
       <Wizard
-        initialValues={{
-          contact: contact,
+        initialData={{
+          contact: {},
           hiddenCode: null,
           keycode: null,
           error: null,
@@ -110,15 +125,15 @@ const ContactVerification = ({
               justifyContent: "flex-end"
             }}
           >
-            <Button
+            <FormButton
               caption="Resend Code"
-              action={() => setIsResendCode(true)}
+              action={(args) => setIsResendCode(args)}
               variant="text"
             />
           </div>
         </Wizard.Page>
       </Wizard>
-    </React.Fragment>
+    </Card>
   );
 };
 
