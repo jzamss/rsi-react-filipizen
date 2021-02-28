@@ -61,7 +61,7 @@ const EPaymentError = ({partner, history, location}) => {
                 </Label>
               }
               <Spacer />
-              <Button variant="text" caption="OK" onClick={onClose} />
+              <Button variant="text" caption="OK" action={onClose} />
           </Content>
         </Card>
       </Panel>

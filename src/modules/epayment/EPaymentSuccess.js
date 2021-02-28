@@ -105,7 +105,7 @@ const styles = {
     padding: 15,
     border: "1px solid #aaa",
     borderRadius: 5,
-    width: "100%",
+    width: 300,
   },
   amountContainer: {
     display: "flex",
