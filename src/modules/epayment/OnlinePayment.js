@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Form,
   Error,
   Panel,
   Modal,
@@ -142,6 +141,7 @@ const OnlinePayment = ({po, error: externalError, payOptions, partner}) => {
                       </button>
                     );
                   })}
+                  <Spacer height="50" />
               </Group>
             </React.Fragment>
           }

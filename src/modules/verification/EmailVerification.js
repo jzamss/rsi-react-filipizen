@@ -4,20 +4,18 @@ import ContactVerification from "./ContactVerification";
 const EmailVerification = ({
   page,
   title,
-  subtitle = "Contact Verification",
-  onVerifyContact,
+  subtitle,
   onCancel,
-  connection = "epayment",
-  visible = true,
-  emailRequired = true,
+  connection,
+  visible,
+  emailRequired,
   moveNextStep
 }) => {
   return (
     <ContactVerification
       page={page}
-      title="Email Verification"
+      title={title}
       subtitle={subtitle}
-      onVerifyContact={onVerifyContact}
       onCancel={onCancel}
       connection={connection}
       visible={visible}
