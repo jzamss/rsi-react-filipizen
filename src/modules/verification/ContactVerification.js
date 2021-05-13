@@ -1,15 +1,13 @@
 import React from "react";
 import {
-  Card,
   Text,
   Mobileno,
   Email,
-  Title,
-  Subtitle,
   Service,
   Wizard,
   FormButton,
-  useDataContext
+  useDataContext,
+  Panel
 } from "rsi-react-components";
 
 import { usePartner } from "../../hooks";
@@ -89,46 +87,50 @@ const ContactVerification = ({
       subtitle={subtitle || (page && page.caption)}
     >
       <Wizard.Page onSubmit={submitInfo} onCancel={onCancel}>
-        {showName && (
-          <React.Fragment>
-            <Text
-              caption="Full Name"
-              name="contact.name"
-              autoFocus={true}
-              required={true}
-            />
-            <Text caption="Address" name="contact.address" required={true} />
-          </React.Fragment>
-        )}
-        <Email
-          name="contact.email"
-          required={emailRequired}
-          autoFocus={!showName}
-        />
-        <Mobileno name="contact.mobileno" />
+        <Panel style={{ minWidth: 400 }}>
+          {showName && (
+            <React.Fragment>
+              <Text
+                caption="Full Name"
+                name="contact.name"
+                autoFocus={true}
+                required={true}
+              />
+              <Text caption="Address" name="contact.address" required={true} />
+            </React.Fragment>
+          )}
+          <Email
+            name="contact.email"
+            required={emailRequired}
+            autoFocus={!showName}
+          />
+          <Mobileno name="contact.mobileno" />
+        </Panel>
       </Wizard.Page>
 
       <Wizard.Page onSubmit={verifyCode}>
-        <Text
-          caption="Email Code"
-          placeholder="Enter code sent to your email"
-          name="keycode"
-          maxLength={6}
-          autoFocus={true}
-        />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "flex-end"
-          }}
-        >
-          <FormButton
-            caption="Resend Code"
-            action={(args) => setIsResendCode(args)}
-            variant="text"
+        <Panel style={{ minWidth: 400 }}>
+          <Text
+            caption="Email Code"
+            placeholder="Enter code sent to your email"
+            name="keycode"
+            maxLength={6}
+            autoFocus={true}
           />
-        </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end"
+            }}
+          >
+            <FormButton
+              caption="Resend Code"
+              action={(args) => setIsResendCode(args)}
+              variant="text"
+            />
+          </div>
+        </Panel>
       </Wizard.Page>
     </Wizard>
   );
